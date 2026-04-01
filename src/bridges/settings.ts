@@ -89,6 +89,13 @@ const settingsBridge = {
         ipcRenderer.invoke("set-fetch-interval", interval)
     },
 
+    getSourceFetchFrequencyIsSeconds: (): boolean => {
+        return ipcRenderer.sendSync("get-source-fetch-frequency-is-seconds")
+    },
+    setSourceFetchFrequencyIsSeconds: (flag: boolean) => {
+        ipcRenderer.invoke("set-source-fetch-frequency-is-seconds", flag)
+    },
+
     getSearchEngine: (): SearchEngines => {
         return ipcRenderer.sendSync("get-search-engine")
     },

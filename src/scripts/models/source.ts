@@ -43,7 +43,7 @@ export class RSSSource {
     unreadCount: number
     lastFetched: Date
     serviceRef?: string
-    fetchFrequency: number // in minutes
+    fetchFrequency: number // in seconds (0 = no per-source throttle)
     rules?: SourceRule[]
     textDir: SourceTextDirection
     hidden: boolean
@@ -352,6 +352,34 @@ export function updateSource(source: RSSSource): AppThunk<Promise<void>> {
             .values([row])
             .exec()
         dispatch(updateSourceDone(source))
+    }
+}
+
+/** Only bumps lastFetched in DB, then reloads the row so other fields (e.g. fetchFrequency) stay correct. */
+export function commitSourceLastFetched(sid: number): AppThunk<Promise<void>> {
+    return async (dispatch, getState) => {
+        const prev = getState().sources[sid]
+        if (!prev || prev.serviceRef) return
+        const t = new Date()
+        await db.sourcesDB
+            .update(db.sources)
+            .where(db.sources.sid.eq(sid))
+            .set(db.sources.lastFetched, t)
+            .exec()
+        const rows = (await db.sourcesDB
+            .select()
+            .from(db.sources)
+            .where(db.sources.sid.eq(sid))
+            .exec()) as RSSSource[]
+        const stored = rows[0]
+        if (stored) {
+            dispatch(
+                updateSourceDone({
+                    ...stored,
+                    unreadCount: prev.unreadCount,
+                } as RSSSource)
+            )
+        }
     }
 }
 

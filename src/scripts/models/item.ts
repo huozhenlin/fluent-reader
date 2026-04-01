@@ -9,7 +9,12 @@ import {
     AppThunk,
     platformCtrl,
 } from "../utils"
-import { RSSSource, updateSource, updateUnreadCounts } from "./source"
+import {
+    RSSSource,
+    updateSource,
+    updateUnreadCounts,
+    commitSourceLastFetched,
+} from "./source"
 import { FeedActionTypes, INIT_FEED, LOAD_MORE, dismissItems } from "./feed"
 import {
     pushNotification,
@@ -23,6 +28,22 @@ import {
     ServiceActionTypes,
     SYNC_LOCAL_ITEMS,
 } from "./service"
+
+function lastFetchedMs(s: RSSSource): number {
+    const t = s.lastFetched as unknown
+    if (t == null) return 0
+    if (typeof t === "number") return t
+    if (t instanceof Date) return t.getTime()
+    const ms = new Date(t as string | number).getTime()
+    return Number.isNaN(ms) ? 0 : ms
+}
+
+function fetchFrequencySec(s: RSSSource): number {
+    const f = s.fetchFrequency as unknown
+    if (f == null || f === "") return 0
+    const n = Number(f)
+    return Number.isFinite(n) && n >= 0 ? n : 0
+}
 
 export class RSSItem {
     _id: number
@@ -225,12 +246,12 @@ export function fetchItems(
             let sources =
                 sids === null
                     ? Object.values(sourcesState).filter(s => {
-                          let last = s.lastFetched ? s.lastFetched.getTime() : 0
+                          let last = lastFetchedMs(s)
+                          let freqSec = fetchFrequencySec(s)
                           return (
                               !s.serviceRef &&
                               (last > timenow ||
-                                  last + (s.fetchFrequency || 0) * 60000 <=
-                                      timenow)
+                                  last + freqSec * 1000 <= timenow)
                           )
                       })
                     : sids
@@ -238,11 +259,9 @@ export function fetchItems(
                           .filter(s => !s.serviceRef)
             for (let source of sources) {
                 let promise = RSSSource.fetchItems(source)
-                promise.then(() =>
-                    dispatch(
-                        updateSource({ ...source, lastFetched: new Date() })
-                    )
-                )
+                promise.then(() => {
+                    dispatch(commitSourceLastFetched(source.sid))
+                })
                 promise.finally(() => dispatch(fetchItemsIntermediate()))
                 promises.push(promise)
             }

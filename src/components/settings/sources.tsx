@@ -51,6 +51,7 @@ type SourcesTabState = {
 } & {
     selectedSource: RSSSource
     selectedSources: RSSSource[]
+    fetchFrequencyInput: string
 }
 
 const enum EditDropdownKeys {
@@ -69,6 +70,7 @@ class SourcesTab extends React.Component<SourcesTabProps, SourcesTabState> {
             newSourceName: "",
             selectedSource: null,
             selectedSources: null,
+            fetchFrequencyInput: "",
         }
         this.selection = new Selection({
             getKey: s => (s as RSSSource).sid,
@@ -83,6 +85,10 @@ class SourcesTab extends React.Component<SourcesTabProps, SourcesTabState> {
                     newSourceName: count === 1 ? sources[0].name : "",
                     newSourceIcon: count === 1 ? sources[0].iconurl || "" : "",
                     sourceEditOption: EditDropdownKeys.Name,
+                    fetchFrequencyInput:
+                        count === 1
+                            ? String(sources[0].fetchFrequency ?? 0)
+                            : "",
                 })
             },
         })
@@ -136,27 +142,35 @@ class SourcesTab extends React.Component<SourcesTabProps, SourcesTabState> {
         this.setState({ sourceEditOption: option.key as string })
     }
 
-    fetchFrequencyOptions = (): IDropdownOption[] => [
-        { key: "0", text: intl.get("sources.unlimited") },
-        { key: "15", text: intl.get("time.minute", { m: 15 }) },
-        { key: "30", text: intl.get("time.minute", { m: 30 }) },
-        { key: "60", text: intl.get("time.hour", { h: 1 }) },
-        { key: "120", text: intl.get("time.hour", { h: 2 }) },
-        { key: "180", text: intl.get("time.hour", { h: 3 }) },
-        { key: "360", text: intl.get("time.hour", { h: 6 }) },
-        { key: "720", text: intl.get("time.hour", { h: 12 }) },
-        { key: "1440", text: intl.get("time.day", { d: 1 }) },
-    ]
-
-    onFetchFrequencyChange = (_, option: IDropdownOption) => {
-        let frequency = parseInt(option.key as string)
-        this.props.updateFetchFrequency(this.state.selectedSource, frequency)
+    onFetchFrequencyChange = (_: unknown, value: string) => {
+        if (value === "") {
+            this.setState({ fetchFrequencyInput: "" })
+            return
+        }
+        const n = parseInt(value, 10)
+        if (isNaN(n) || n < 0) return
+        const capped = Math.min(n, 30 * 24 * 3600)
+        this.props.updateFetchFrequency(this.state.selectedSource, capped)
         this.setState({
+            fetchFrequencyInput: String(capped),
             selectedSource: {
                 ...this.state.selectedSource,
-                fetchFrequency: frequency,
+                fetchFrequency: capped,
             } as RSSSource,
         })
+    }
+
+    onFetchFrequencyBlur = () => {
+        if (this.state.fetchFrequencyInput === "") {
+            this.props.updateFetchFrequency(this.state.selectedSource, 0)
+            this.setState({
+                fetchFrequencyInput: "0",
+                selectedSource: {
+                    ...this.state.selectedSource,
+                    fetchFrequency: 0,
+                } as RSSSource,
+            })
+        }
     }
 
     sourceOpenTargetChoices = (): IChoiceGroupOption[] => [
@@ -395,19 +409,16 @@ class SourcesTab extends React.Component<SourcesTabProps, SourcesTabState> {
                             <Label>{intl.get("sources.fetchFrequency")}</Label>
                             <Stack>
                                 <Stack.Item>
-                                    <Dropdown
-                                        options={this.fetchFrequencyOptions()}
-                                        selectedKey={
-                                            this.state.selectedSource
-                                                .fetchFrequency
-                                                ? String(
-                                                      this.state.selectedSource
-                                                          .fetchFrequency
-                                                  )
-                                                : "0"
-                                        }
+                                    <TextField
+                                        type="number"
+                                        min={0}
+                                        value={this.state.fetchFrequencyInput}
                                         onChange={this.onFetchFrequencyChange}
-                                        style={{ width: 200 }}
+                                        onBlur={this.onFetchFrequencyBlur}
+                                        description={intl.get(
+                                            "sources.fetchFrequencySecondsHint"
+                                        )}
+                                        styles={{ root: { width: 280 } }}
                                     />
                                 </Stack.Item>
                             </Stack>

@@ -139,10 +139,30 @@ ipcMain.on("get-all-settings", event => {
 })
 
 const FETCH_INTEVAL_STORE_KEY = "fetchInterval"
+const FETCH_INTERVAL_IS_SECONDS_KEY = "fetchIntervalIsSeconds"
+/** Legacy UI stored minutes; values are now seconds. */
+const LEGACY_FETCH_INTERVAL_MINUTES = [10, 15, 20, 30, 45, 60]
+
+function normalizeFetchInterval(): number {
+    let v = store.get(FETCH_INTEVAL_STORE_KEY, 0)
+    if (!store.get(FETCH_INTERVAL_IS_SECONDS_KEY, false)) {
+        if (
+            v !== 0 &&
+            LEGACY_FETCH_INTERVAL_MINUTES.includes(v as number)
+        ) {
+            v = (v as number) * 60
+            store.set(FETCH_INTEVAL_STORE_KEY, v)
+        }
+        store.set(FETCH_INTERVAL_IS_SECONDS_KEY, true)
+    }
+    return v as number
+}
+
 ipcMain.on("get-fetch-interval", event => {
-    event.returnValue = store.get(FETCH_INTEVAL_STORE_KEY, 0)
+    event.returnValue = normalizeFetchInterval()
 })
 ipcMain.handle("set-fetch-interval", (_, interval: number) => {
+    store.set(FETCH_INTERVAL_IS_SECONDS_KEY, true)
     store.set(FETCH_INTEVAL_STORE_KEY, interval)
 })
 
@@ -203,4 +223,12 @@ ipcMain.on("get-nedb-status", event => {
 })
 ipcMain.handle("set-nedb-status", (_, flag: boolean) => {
     store.set(NEDB_STATUS_STORE_KEY, flag)
+})
+
+const SOURCE_FETCH_FREQ_IS_SECONDS_KEY = "sourceFetchFrequencyIsSeconds"
+ipcMain.on("get-source-fetch-frequency-is-seconds", event => {
+    event.returnValue = store.get(SOURCE_FETCH_FREQ_IS_SECONDS_KEY, false)
+})
+ipcMain.handle("set-source-fetch-frequency-is-seconds", (_, flag: boolean) => {
+    store.set(SOURCE_FETCH_FREQ_IS_SECONDS_KEY, flag)
 })

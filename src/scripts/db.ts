@@ -60,6 +60,23 @@ async function onUpgradeSourceDB(rawDb: lf.raw.BackStore) {
     }
 }
 
+async function migrateFetchFrequencyMinutesToSeconds() {
+    const rows = (await sourcesDB.select().from(sources).exec()) as {
+        sid: number
+        fetchFrequency: number
+    }[]
+    for (const row of rows) {
+        const freq = row.fetchFrequency
+        if (freq > 0) {
+            await sourcesDB
+                .update(sources)
+                .set(sources.fetchFrequency, freq * 60)
+                .where(sources.sid.eq(row.sid))
+                .exec()
+        }
+    }
+}
+
 export async function init() {
     sourcesDB = await sdbSchema.connect({ onUpgrade: onUpgradeSourceDB })
     sources = sourcesDB.getSchema().table("sources")
@@ -67,6 +84,10 @@ export async function init() {
     items = itemsDB.getSchema().table("items")
     if (window.settings.getNeDBStatus()) {
         await migrateNeDB()
+    }
+    if (!window.settings.getSourceFetchFrequencyIsSeconds()) {
+        await migrateFetchFrequencyMinutesToSeconds()
+        window.settings.setSourceFetchFrequencyIsSeconds(true)
     }
 }
 

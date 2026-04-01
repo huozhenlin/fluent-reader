@@ -134,6 +134,7 @@
         "name": "订阅源名称",
         "editName": "修改名称",
         "fetchFrequency": "抓取频率限制",
+        "fetchFrequencySecondsHint": "该订阅源两次抓取之间的最短间隔秒数（0 表示不限制）。",
         "unlimited": "无限制",
         "openTarget": "订阅源文章打开方式",
         "delete": "删除订阅源",
@@ -235,6 +236,7 @@
         "setPac": "设置PAC",
         "pacHint": "对于Socks代理建议PAC返回“SOCKS5”以启用代理端解析。关闭代理需重启应用后生效。",
         "fetchInterval": "自动抓取频率",
+        "fetchIntervalSecondsHint": "自动抓取间隔（秒，0 表示从不自动抓取）。",
         "never": "从不"
     }
 }

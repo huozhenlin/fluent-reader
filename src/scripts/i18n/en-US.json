@@ -136,6 +136,7 @@
         "name": "Source name",
         "editName": "Edit name",
         "fetchFrequency": "Fetch frequency limit",
+        "fetchFrequencySecondsHint": "Minimum seconds between fetches for this source (0 = no limit).",
         "unlimited": "Unlimited",
         "openTarget": "Default open target for articles",
         "delete": "Delete source",
@@ -237,6 +238,7 @@
         "setPac": "Set PAC",
         "pacHint": "For Socks proxies, it is recommended for PAC to return \"SOCKS5\" for proxy-side DNS. Turning off proxy requires restart.",
         "fetchInterval": "Automatic fetch interval",
+        "fetchIntervalSecondsHint": "Seconds between automatic fetches (0 = never).",
         "never": "Never"
     }
 }

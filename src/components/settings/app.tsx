@@ -40,6 +40,7 @@ type AppTabState = {
     itemSize: string
     cacheSize: string
     deleteIndex: string
+    fetchInterval: string
 }
 
 class AppTab extends React.Component<AppTabProps, AppTabState> {
@@ -52,6 +53,7 @@ class AppTab extends React.Component<AppTabProps, AppTabState> {
             itemSize: null,
             cacheSize: null,
             deleteIndex: null,
+            fetchInterval: String(window.settings.getFetchInterval()),
         }
         this.getItemSize()
         this.getCacheSize()
@@ -80,17 +82,23 @@ class AppTab extends React.Component<AppTabProps, AppTabState> {
         { key: ThemeSettings.Dark, text: intl.get("app.darkTheme") },
     ]
 
-    fetchIntervalOptions = (): IDropdownOption[] => [
-        { key: 0, text: intl.get("app.never") },
-        { key: 10, text: intl.get("time.minute", { m: 10 }) },
-        { key: 15, text: intl.get("time.minute", { m: 15 }) },
-        { key: 20, text: intl.get("time.minute", { m: 20 }) },
-        { key: 30, text: intl.get("time.minute", { m: 30 }) },
-        { key: 45, text: intl.get("time.minute", { m: 45 }) },
-        { key: 60, text: intl.get("time.hour", { h: 1 }) },
-    ]
-    onFetchIntervalChanged = (item: IDropdownOption) => {
-        this.props.setFetchInterval(item.key as number)
+    onFetchIntervalChange = (_: unknown, value: string) => {
+        if (value === "") {
+            this.setState({ fetchInterval: "" })
+            return
+        }
+        const n = parseInt(value, 10)
+        if (isNaN(n) || n < 0) return
+        const capped = Math.min(n, 7 * 24 * 3600)
+        this.setState({ fetchInterval: String(capped) })
+        this.props.setFetchInterval(capped)
+    }
+
+    onFetchIntervalBlur = () => {
+        if (this.state.fetchInterval === "") {
+            this.setState({ fetchInterval: "0" })
+            this.props.setFetchInterval(0)
+        }
     }
 
     searchEngineOptions = (): IDropdownOption[] =>
@@ -199,11 +207,14 @@ class AppTab extends React.Component<AppTabProps, AppTabState> {
             <Label>{intl.get("app.fetchInterval")}</Label>
             <Stack horizontal>
                 <Stack.Item>
-                    <Dropdown
-                        defaultSelectedKey={window.settings.getFetchInterval()}
-                        options={this.fetchIntervalOptions()}
-                        onChanged={this.onFetchIntervalChanged}
-                        style={{ width: 200 }}
+                    <TextField
+                        type="number"
+                        min={0}
+                        value={this.state.fetchInterval}
+                        onChange={this.onFetchIntervalChange}
+                        onBlur={this.onFetchIntervalBlur}
+                        description={intl.get("app.fetchIntervalSecondsHint")}
+                        styles={{ root: { width: 280 } }}
                     />
                 </Stack.Item>
             </Stack>

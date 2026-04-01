@@ -328,7 +328,7 @@ export function setupAutoFetch(): AppThunk {
                     } else {
                         setupTimeout(1)
                     }
-                }, interval * 60000)
+                }, interval * 1000)
             }
         }
         setupTimeout()

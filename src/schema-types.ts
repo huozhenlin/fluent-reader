@@ -92,7 +92,12 @@ export type SchemaTypes = {
     fontSize: number
     fontFamily: string
     menuOn: boolean
+    /** Global auto-fetch interval in seconds (0 = never). Legacy configs used minutes. */
     fetchInterval: number
+    /** True after migrating legacy minute-based fetch interval to seconds. */
+    fetchIntervalIsSeconds?: boolean
+    /** True after migrating per-source fetch frequency from minutes to seconds. */
+    sourceFetchFrequencyIsSeconds?: boolean
     searchEngine: SearchEngines
     serviceConfigs: ServiceConfigs
     filterType: number
