@@ -103,4 +103,7 @@ export type SchemaTypes = {
     filterType: number
     listViewConfigs: ViewConfigs
     useNeDB: boolean
+    /** Comma/newline-separated substrings; publisher names containing any are highlighted and can notify. */
+    /** Comma/newline-separated substrings to highlight in article title/snippet/body. */
+    articleHighlightKeywords?: string
 }

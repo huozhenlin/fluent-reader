@@ -27,10 +27,19 @@ const DefaultCard: React.FunctionComponent<Card.Props> = props => (
         ) : null}
         <CardInfo source={props.source} item={props.item} />
         <h3 className="title">
-            <Highlights text={props.item.title} filter={props.filter} title />
+            <Highlights
+                text={props.item.title}
+                filter={props.filter}
+                title
+                keywordStrings={props.keywordStrings}
+            />
         </h3>
         <p className={"snippet" + (props.item.thumb ? "" : " show")}>
-            <Highlights text={props.item.snippet} filter={props.filter} />
+            <Highlights
+                text={props.item.snippet}
+                filter={props.filter}
+                keywordStrings={props.keywordStrings}
+            />
         </p>
     </div>
 )

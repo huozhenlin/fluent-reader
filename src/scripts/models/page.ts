@@ -10,6 +10,11 @@ import {
 } from "./feed"
 import { getWindowBreakpoint, AppThunk, ActionStatus } from "../utils"
 import { RSSItem, markRead } from "./item"
+import {
+    filterItemsByPublisherKey,
+    PUBLISHER_KEY_MY_FOLLOWING,
+} from "./publisher-filter"
+import { parseArticleKeywords } from "../utils/article-keywords-match"
 import { SourceActionTypes, DELETE_SOURCE } from "./source"
 import { toggleMenu } from "./app"
 import { ViewType, ViewConfigs } from "../../schema-types"
@@ -22,6 +27,8 @@ export const SHOW_OFFSET_ITEM = "SHOW_OFFSET_ITEM"
 export const DISMISS_ITEM = "DISMISS_ITEM"
 export const APPLY_FILTER = "APPLY_FILTER"
 export const TOGGLE_SEARCH = "TOGGLE_SEARCH"
+export const SELECT_PUBLISHER = "SELECT_PUBLISHER"
+export const SET_ARTICLE_HIGHLIGHT_KEYWORDS = "SET_ARTICLE_HIGHLIGHT_KEYWORDS"
 
 export enum PageType {
     AllArticles,
@@ -68,6 +75,17 @@ interface ToggleSearchAction {
     type: typeof TOGGLE_SEARCH
 }
 
+interface SelectPublisherAction {
+    type: typeof SELECT_PUBLISHER
+    /** null = all publishers; "" = items with no creator; PUBLISHER_KEY_MY_FOLLOWING = keyword matches */
+    publisherKey: string | null
+}
+
+interface SetArticleHighlightKeywordsAction {
+    type: typeof SET_ARTICLE_HIGHLIGHT_KEYWORDS
+    value: string
+}
+
 export type PageActionTypes =
     | SelectPageAction
     | SwitchViewAction
@@ -76,6 +94,14 @@ export type PageActionTypes =
     | ApplyFilterAction
     | ToggleSearchAction
     | SetViewConfigsAction
+    | SelectPublisherAction
+    | SetArticleHighlightKeywordsAction
+
+export function setArticleHighlightKeywords(
+    value: string
+): SetArticleHighlightKeywordsAction {
+    return { type: SET_ARTICLE_HIGHLIGHT_KEYWORDS, value }
+}
 
 export function selectAllArticles(init = false): AppThunk {
     return (dispatch, getState) => {
@@ -153,6 +179,10 @@ export function showItemFromId(iid: number): AppThunk {
 
 export const dismissItem = (): PageActionTypes => ({ type: DISMISS_ITEM })
 
+export function selectPublisher(publisherKey: string | null): PageActionTypes {
+    return { type: SELECT_PUBLISHER, publisherKey }
+}
+
 export const toggleSearch = (): AppThunk => {
     return (dispatch, getState) => {
         let state = getState()
@@ -177,14 +207,20 @@ export function showOffsetItem(offset: number): AppThunk {
         if (!state.page.itemFromFeed) return
         let [itemId, feedId] = [state.page.itemId, state.page.feedId]
         let feed = state.feeds[feedId]
-        let iids = feed.iids
+        let allItems = feed.iids.map(id => state.items[id])
+        let filteredItems = filterItemsByPublisherKey(
+            allItems,
+            state.page.publisherKey,
+            parseArticleKeywords(state.page.articleHighlightKeywords)
+        )
+        let iids = filteredItems.map(i => i._id)
         let itemIndex = iids.indexOf(itemId)
         let newIndex = itemIndex + offset
         if (itemIndex < 0) {
             let item = state.items[itemId]
-            let prevs = feed.iids
+            let prevs = filteredItems
                 .map(
-                    (id, index) => [state.items[id], index] as [RSSItem, number]
+                    (it, index) => [it, index] as [RSSItem, number]
                 )
                 .filter(([i, _]) => i.date > item.date)
             if (prevs.length > 0) {
@@ -279,6 +315,11 @@ export class PageState {
     itemId = null as number
     itemFromFeed = true
     searchOn = false
+    /** List view: filter by RSS creator (author); null = all */
+    publisherKey: string | null = null
+    /** Synced with settings; drives publisher rail "我的关注" and keyword filtering */
+    articleHighlightKeywords: string =
+        window.settings.getArticleHighlightKeywords()
 }
 
 export function pageReducer(
@@ -293,12 +334,14 @@ export function pageReducer(
                         ...state,
                         feedId: ALL,
                         itemId: null,
+                        publisherKey: null,
                     }
                 case PageType.Sources:
                     return {
                         ...state,
                         feedId: SOURCE,
                         itemId: null,
+                        publisherKey: null,
                     }
                 default:
                     return state
@@ -309,7 +352,26 @@ export function pageReducer(
                 viewType: action.viewType,
                 viewConfigs: window.settings.getViewConfigs(action.viewType),
                 itemId: null,
+                publisherKey: null,
             }
+        case SELECT_PUBLISHER:
+            return {
+                ...state,
+                publisherKey: action.publisherKey,
+                itemId: null,
+            }
+        case SET_ARTICLE_HIGHLIGHT_KEYWORDS: {
+            const parsed = parseArticleKeywords(action.value)
+            return {
+                ...state,
+                articleHighlightKeywords: action.value,
+                publisherKey:
+                    parsed.length === 0 &&
+                    state.publisherKey === PUBLISHER_KEY_MY_FOLLOWING
+                        ? null
+                        : state.publisherKey,
+            }
+        }
         case SET_VIEW_CONFIGS:
             return {
                 ...state,

@@ -1,16 +1,43 @@
 import * as React from "react"
-import { useCallback } from "react"
+import { useCallback, useState } from "react"
 import { Feed } from "./feeds/feed"
 import { Icon, FocusTrapZone } from "@fluentui/react"
 import ArticleContainer from "../containers/article-container"
 import { ViewType } from "../schema-types"
 import ArticleSearch from "./utils/article-search"
+import SourcesRail from "./sources-rail"
+import PublisherRail from "./publisher-rail"
 import { useAppSelector, useAppDispatch } from "../scripts/reducer"
 import { dismissItem, showOffsetItem } from "../scripts/models/page"
+import { SOURCE } from "../scripts/models/feed"
 import { ContextMenuType } from "../scripts/models/app"
+
+const SOURCES_RAIL_COLLAPSED_KEY = "fluent-reader.sourcesRailCollapsed"
 
 const Page: React.FC = () => {
     const dispatch = useAppDispatch()
+
+    const [sourcesRailCollapsed, setSourcesRailCollapsed] = useState(() => {
+        try {
+            return localStorage.getItem(SOURCES_RAIL_COLLAPSED_KEY) === "1"
+        } catch {
+            return false
+        }
+    })
+    const toggleSourcesRail = useCallback(() => {
+        setSourcesRailCollapsed(c => {
+            const next = !c
+            try {
+                localStorage.setItem(
+                    SOURCES_RAIL_COLLAPSED_KEY,
+                    next ? "1" : "0"
+                )
+            } catch {
+                /* ignore */
+            }
+            return next
+        })
+    }, [])
 
     const feedId = useAppSelector(s => s.page.feedId)
     const settingsOn = useAppSelector(s => s.app.settings.display)
@@ -21,6 +48,11 @@ const Page: React.FC = () => {
     const itemId = useAppSelector(s => s.page.itemId)
     const itemFromFeed = useAppSelector(s => s.page.itemFromFeed)
     const viewType = useAppSelector(s => s.page.viewType)
+    const sourceFeed = useAppSelector(s => s.feeds[SOURCE])
+    const showPublisherRail =
+        viewType === ViewType.List &&
+        feedId === SOURCE &&
+        sourceFeed != null
 
     const handleDismissItem = useCallback(() => dispatch(dismissItem()), [])
     const handleOffsetItem = useCallback(
@@ -44,8 +76,18 @@ const Page: React.FC = () => {
             {settingsOn ? null : (
                 <div
                     key="list"
-                    className={"list-main" + (menuOn ? " menu-on" : "")}>
+                    className={
+                        "list-main" +
+                        (menuOn ? " menu-on" : "") +
+                        (sourcesRailCollapsed ? " sources-rail-collapsed" : "") +
+                        (showPublisherRail ? " has-publisher-rail" : "")
+                    }>
                     <ArticleSearch />
+                    <SourcesRail
+                        collapsed={sourcesRailCollapsed}
+                        onToggleCollapse={toggleSourcesRail}
+                    />
+                    <PublisherRail />
                     <div className="list-feed-container">
                         <Feed
                             viewType={viewType}

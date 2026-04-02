@@ -31,6 +31,7 @@ type AppTabProps = {
     setFetchInterval: (interval: number) => void
     deleteArticles: (days: number) => Promise<void>
     importAll: () => Promise<void>
+    setArticleHighlightKeywords: (value: string) => void
 }
 
 type AppTabState = {
@@ -41,6 +42,7 @@ type AppTabState = {
     cacheSize: string
     deleteIndex: string
     fetchInterval: string
+    articleKeywords: string
 }
 
 class AppTab extends React.Component<AppTabProps, AppTabState> {
@@ -54,9 +56,16 @@ class AppTab extends React.Component<AppTabProps, AppTabState> {
             cacheSize: null,
             deleteIndex: null,
             fetchInterval: String(window.settings.getFetchInterval()),
+            articleKeywords: window.settings.getArticleHighlightKeywords(),
         }
         this.getItemSize()
         this.getCacheSize()
+    }
+
+    componentDidMount() {
+        this.props.setArticleHighlightKeywords(
+            window.settings.getArticleHighlightKeywords()
+        )
     }
 
     getCacheSize = () => {
@@ -113,6 +122,28 @@ class AppTab extends React.Component<AppTabProps, AppTabState> {
         }))
     onSearchEngineChanged = (item: IDropdownOption) => {
         window.settings.setSearchEngine(item.key as number)
+    }
+
+    onArticleKeywordsChange = (_: unknown, value: string) => {
+        this.setState({ articleKeywords: value ?? "" })
+    }
+
+    onArticleKeywordsBlur = () => {
+        const v = this.state.articleKeywords.trim()
+        const prev = window.settings.getArticleHighlightKeywords()
+        if (v === prev) {
+            return
+        }
+        window.settings.setArticleHighlightKeywords(v)
+        this.props.setArticleHighlightKeywords(v)
+        this.setState({ articleKeywords: v })
+        if (
+            typeof Notification !== "undefined" &&
+            Notification.permission === "default"
+        ) {
+            Notification.requestPermission()
+        }
+        window.dispatchEvent(new CustomEvent("article-keywords-changed"))
     }
 
     deleteOptions = (): IDropdownOption[] => [
@@ -230,6 +261,21 @@ class AppTab extends React.Component<AppTabProps, AppTabState> {
                     />
                 </Stack.Item>
             </Stack>
+
+            <Label>{intl.get("app.articleKeywords")}</Label>
+            <TextField
+                multiline
+                rows={4}
+                resizable={false}
+                value={this.state.articleKeywords}
+                onChange={this.onArticleKeywordsChange}
+                onBlur={this.onArticleKeywordsBlur}
+                placeholder={intl.get("app.articleKeywordsPlaceholder")}
+                styles={{ root: { maxWidth: 480 } }}
+            />
+            <span className="settings-hint up">
+                {intl.get("app.articleKeywordsHint")}
+            </span>
 
             <Stack horizontal verticalAlign="baseline">
                 <Stack.Item grow>

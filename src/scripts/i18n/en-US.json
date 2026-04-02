@@ -48,7 +48,22 @@
     },
     "menu": {
         "close": "Close menu",
-        "subscriptions": "Subscriptions"
+        "subscriptions": "Subscriptions",
+        "expand": "Expand or collapse"
+    },
+    "sourcesRail": {
+        "subscriptionColumn": "Subscriptions",
+        "publishers": "Feeds",
+        "collapse": "Collapse subscription column",
+        "expand": "Expand subscription column"
+    },
+    "publisherRail": {
+        "columnTitle": "Publishers",
+        "allPublishers": "All",
+        "myFollowing": "My following",
+        "noAuthor": "(No author)",
+        "unreadSuffix": " unread items",
+        "allRead": "No new items"
     },
     "article": {
         "error": "Failed to load article.",
@@ -239,6 +254,13 @@
         "pacHint": "For Socks proxies, it is recommended for PAC to return \"SOCKS5\" for proxy-side DNS. Turning off proxy requires restart.",
         "fetchInterval": "Automatic fetch interval",
         "fetchIntervalSecondsHint": "Seconds between automatic fetches (0 = never).",
-        "never": "Never"
+        "never": "Never",
+        "articleKeywords": "Article keyword highlights",
+        "articleKeywordsPlaceholder": "One per line, or separate with commas / semicolons",
+        "articleKeywordsHint": "Matching substrings in article titles, snippets, and body text are highlighted in red. When the window is in the background, a system notification is sent once per article per keyword (this session)."
+    },
+    "articleKeyword": {
+        "notifyTitle": "Article keyword match",
+        "notifyBody": "\"{title}\" matched keyword \"{keyword}\""
     }
 }

@@ -23,6 +23,7 @@ const ListFeed: React.FC<FeedProps> = props => {
             item: item,
             source: props.sourceMap[item.source],
             filter: props.filter,
+            keywordStrings: props.keywordStrings,
             viewConfigs: props.viewConfigs,
             shortcuts: props.shortcuts,
             markRead: props.markRead,

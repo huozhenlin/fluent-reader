@@ -8,6 +8,7 @@ import * as db from "../../scripts/db"
 import AppTab from "../../components/settings/app"
 import { importAll } from "../../scripts/settings"
 import { updateUnreadCounts } from "../../scripts/models/source"
+import { setArticleHighlightKeywords } from "../../scripts/models/page"
 import { AppDispatch } from "../../scripts/utils"
 
 const mapDispatchToProps = (dispatch: AppDispatch) => ({
@@ -35,6 +36,9 @@ const mapDispatchToProps = (dispatch: AppDispatch) => ({
         dispatch(saveSettings())
         let cancelled = await importAll()
         if (cancelled) dispatch(saveSettings())
+    },
+    setArticleHighlightKeywords: (value: string) => {
+        dispatch(setArticleHighlightKeywords(value))
     },
 })
 

@@ -48,7 +48,22 @@
     },
     "menu": {
         "close": "关闭菜单",
-        "subscriptions": "订阅源"
+        "subscriptions": "订阅源",
+        "expand": "展开或折叠"
+    },
+    "sourcesRail": {
+        "subscriptionColumn": "订阅源",
+        "publishers": "订阅",
+        "collapse": "收起订阅栏",
+        "expand": "展开订阅栏"
+    },
+    "publisherRail": {
+        "columnTitle": "发布主体",
+        "allPublishers": "全部",
+        "myFollowing": "我的关注",
+        "noAuthor": "（未署名）",
+        "unreadSuffix": "条未读信息",
+        "allRead": "暂无新信息"
     },
     "article": {
         "error": "文章加载失败",
@@ -237,6 +252,13 @@
         "pacHint": "对于Socks代理建议PAC返回“SOCKS5”以启用代理端解析。关闭代理需重启应用后生效。",
         "fetchInterval": "自动抓取频率",
         "fetchIntervalSecondsHint": "自动抓取间隔（秒，0 表示从不自动抓取）。",
-        "never": "从不"
+        "never": "从不",
+        "articleKeywords": "文章关键词",
+        "articleKeywordsPlaceholder": "每行一个，或用逗号、分号分隔",
+        "articleKeywordsHint": "标题、摘要与正文中含有关键字的部分会标红。窗口在后台时，每篇文章与每个关键字在本会话内最多提示一次系统通知。"
+    },
+    "articleKeyword": {
+        "notifyTitle": "文章关键词",
+        "notifyBody": "「{title}」命中关键字「{keyword}」"
     }
 }

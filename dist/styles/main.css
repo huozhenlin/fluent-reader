@@ -239,10 +239,15 @@ body.darwin.not-fullscreen .article-search {
 .list-main .article-search {
     max-width: 294px;
     margin: 4px 10px;
+    left: calc(
+        var(--listSourcesRailWidth, 260px) + var(--listPublisherRailWidth, 0px)
+    );
 }
 body.darwin .list-main .article-search {
     max-width: 314px;
-    left: 0;
+    left: calc(
+        var(--listSourcesRailWidth, 260px) + var(--listPublisherRailWidth, 0px)
+    );
     top: var(--navHeight);
     margin: 0 10px;
 }
@@ -308,11 +313,17 @@ body.darwin .list-main .article-search {
         max-width: calc(100% - 556px);
     }
     .list-main.menu-on .article-search {
-        left: 0;
+        left: calc(
+            var(--listSourcesRailWidth, 260px) +
+                var(--listPublisherRailWidth, 0px)
+        );
         width: 330px;
     }
     body.darwin .list-main.menu-on .article-search {
-        left: 0;
+        left: calc(
+            var(--listSourcesRailWidth, 260px) +
+                var(--listPublisherRailWidth, 0px)
+        );
         top: 4px;
     }
 

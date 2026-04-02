@@ -1,15 +1,19 @@
 import * as React from "react"
 import { validateRegex } from "../../scripts/utils"
 import { FeedFilter, FilterType } from "../../scripts/models/feed"
-import { SourceTextDirection } from "../../scripts/models/source"
+import { highlightTextWithKeywords } from "../utils/article-keywords"
 
 type HighlightsProps = {
     text: string
     filter: FeedFilter
     title?: boolean
+    keywordStrings?: string[]
 }
 
 const Highlights: React.FunctionComponent<HighlightsProps> = props => {
+    const kw = props.keywordStrings
+    const withKw = (fragment: string) =>
+        kw?.length ? highlightTextWithKeywords(fragment, kw) : fragment
     const spans: [string, boolean][] = new Array()
     const flags = props.filter.type & FilterType.CaseInsensitive ? "ig" : "g"
     let regex: RegExp
@@ -61,7 +65,11 @@ const Highlights: React.FunctionComponent<HighlightsProps> = props => {
     return (
         <>
             {spans.map(([text, flag]) =>
-                flag ? <span className="h">{text}</span> : text
+                flag ? (
+                    <span className="h">{withKw(text)}</span>
+                ) : (
+                    withKw(text)
+                )
             )}
         </>
     )

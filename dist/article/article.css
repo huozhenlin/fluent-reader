@@ -53,6 +53,16 @@ a:active {
     text-decoration: underline;
 }
 
+.article-keyword-hit {
+    color: #a4262c;
+    font-weight: 600;
+}
+@media (prefers-color-scheme: dark) {
+    .article-keyword-hit {
+        color: #f1707b;
+    }
+}
+
 @keyframes fadeIn {
     0% {
         opacity: 0;

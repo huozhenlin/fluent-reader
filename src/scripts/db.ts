@@ -22,7 +22,7 @@ sdbSchema
     .addNullable(["iconurl", "serviceRef", "rules"])
     .addIndex("idxURL", ["url"], true)
 
-const idbSchema = lf.schema.create("itemsDB", 1)
+const idbSchema = lf.schema.create("itemsDB", 2)
 idbSchema
     .createTable("items")
     .addColumn("_id", lf.Type.INTEGER)
@@ -36,12 +36,13 @@ idbSchema
     .addColumn("content", lf.Type.STRING)
     .addColumn("snippet", lf.Type.STRING)
     .addColumn("creator", lf.Type.STRING)
+    .addColumn("creatorAvatar", lf.Type.STRING)
     .addColumn("hasRead", lf.Type.BOOLEAN)
     .addColumn("starred", lf.Type.BOOLEAN)
     .addColumn("hidden", lf.Type.BOOLEAN)
     .addColumn("notify", lf.Type.BOOLEAN)
     .addColumn("serviceRef", lf.Type.STRING)
-    .addNullable(["thumb", "creator", "serviceRef"])
+    .addNullable(["thumb", "creator", "creatorAvatar", "serviceRef"])
     .addIndex("idxDate", ["date"], false, lf.Order.DESC)
     .addIndex("idxService", ["serviceRef"], false)
 
@@ -49,6 +50,13 @@ export let sourcesDB: lf.Database
 export let sources: lf.schema.Table
 export let itemsDB: lf.Database
 export let items: lf.schema.Table
+
+async function onUpgradeItemsDB(rawDb: lf.raw.BackStore) {
+    const version = rawDb.getVersion()
+    if (version < 2) {
+        await rawDb.addTableColumn("items", "creatorAvatar", null)
+    }
+}
 
 async function onUpgradeSourceDB(rawDb: lf.raw.BackStore) {
     const version = rawDb.getVersion()
@@ -80,7 +88,7 @@ async function migrateFetchFrequencyMinutesToSeconds() {
 export async function init() {
     sourcesDB = await sdbSchema.connect({ onUpgrade: onUpgradeSourceDB })
     sources = sourcesDB.getSchema().table("sources")
-    itemsDB = await idbSchema.connect()
+    itemsDB = await idbSchema.connect({ onUpgrade: onUpgradeItemsDB })
     items = itemsDB.getSchema().table("items")
     if (window.settings.getNeDBStatus()) {
         await migrateNeDB()

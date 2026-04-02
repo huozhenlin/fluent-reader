@@ -25,10 +25,15 @@ const CompactCard: React.FunctionComponent<Card.Props> = props => (
                     text={props.item.title}
                     filter={props.filter}
                     title
+                    keywordStrings={props.keywordStrings}
                 />
             </span>
             <span className="snippet">
-                <Highlights text={props.item.snippet} filter={props.filter} />
+                <Highlights
+                    text={props.item.snippet}
+                    filter={props.filter}
+                    keywordStrings={props.keywordStrings}
+                />
             </span>
         </div>
         <Time date={props.item.date} />

@@ -11,6 +11,7 @@ export namespace Card {
         item: RSSItem
         source: RSSSource
         filter: FeedFilter
+        keywordStrings?: string[]
         selected?: boolean
         viewConfigs?: ViewConfigs
         shortcuts: (item: RSSItem, e: KeyboardEvent) => void

@@ -31,6 +31,7 @@ export const Menu: React.FC = () => {
         [rawGroups]
     )
     const searchOn = useAppSelector(s => s.page.searchOn)
+    const viewType = useAppSelector(s => s.page.viewType)
     const itemOn = useAppSelector(
         s => s.page.itemId !== null && s.page.viewType !== ViewType.List
     )
@@ -89,63 +90,70 @@ export const Menu: React.FC = () => {
         url: null,
     })
 
-    const getLinkGroups = (): INavLinkGroup[] => [
-        {
-            links: [
-                {
-                    name: intl.get("search"),
-                    ariaLabel: intl.get("search") + (searchOn ? " ✓" : " "),
-                    key: "search",
-                    icon: "Search",
-                    onClick: handleToggleSearch,
-                    url: null,
-                },
-                {
-                    name: intl.get("allArticles"),
-                    ariaLabel:
-                        intl.get("allArticles") +
-                        countOverflow(
-                            Object.values(sources)
-                                .filter(s => !s.hidden)
-                                .map(s => s.unreadCount)
-                                .reduce((a, b) => a + b, 0)
-                        ),
-                    key: ALL,
-                    icon: "TextDocument",
-                    onClick: () => handleAllArticles(selected !== ALL),
-                    url: null,
-                },
-            ],
-        },
-        {
-            name: intl.get("menu.subscriptions"),
-            links: groups
-                .filter(g => g.sids.length > 0)
-                .map(g => {
-                    if (g.isMultiple) {
-                        const groupSources = g.sids.map(sid => sources[sid])
-                        return {
-                            name: g.name,
-                            ariaLabel:
-                                g.name +
-                                countOverflow(
-                                    groupSources
-                                        .map(s => s.unreadCount)
-                                        .reduce((a, b) => a + b, 0)
-                                ),
-                            key: "g-" + g.index,
-                            url: null,
-                            isExpanded: g.expanded,
-                            onClick: () =>
-                                handleSelectSourceGroup(g, "g-" + g.index),
-                            links: groupSources.map(getSource),
+    const getLinkGroups = (): INavLinkGroup[] => {
+        const mainLinks: INavLink[] = [
+            {
+                name: intl.get("search"),
+                ariaLabel: intl.get("search") + (searchOn ? " ✓" : " "),
+                key: "search",
+                icon: "Search",
+                onClick: handleToggleSearch,
+                url: null,
+            },
+            {
+                name: intl.get("allArticles"),
+                ariaLabel:
+                    intl.get("allArticles") +
+                    countOverflow(
+                        Object.values(sources)
+                            .filter(s => !s.hidden)
+                            .map(s => s.unreadCount)
+                            .reduce((a, b) => a + b, 0)
+                    ),
+                key: ALL,
+                icon: "TextDocument",
+                onClick: () => handleAllArticles(selected !== ALL),
+                url: null,
+            },
+        ]
+        if (viewType === ViewType.List) {
+            return [{ links: mainLinks }]
+        }
+        return [
+            { links: mainLinks },
+            {
+                name: intl.get("menu.subscriptions"),
+                links: groups
+                    .filter(g => g.sids.length > 0)
+                    .map(g => {
+                        if (g.isMultiple) {
+                            const groupSources = g.sids.map(sid => sources[sid])
+                            return {
+                                name: g.name,
+                                ariaLabel:
+                                    g.name +
+                                    countOverflow(
+                                        groupSources
+                                            .map(s => s.unreadCount)
+                                            .reduce((a, b) => a + b, 0)
+                                    ),
+                                key: "g-" + g.index,
+                                url: null,
+                                isExpanded: g.expanded,
+                                onClick: () =>
+                                    handleSelectSourceGroup(
+                                        g,
+                                        "g-" + g.index
+                                    ),
+                                links: groupSources.map(getSource),
+                            }
+                        } else {
+                            return getSource(sources[g.sids[0]])
                         }
-                    } else {
-                        return getSource(sources[g.sids[0]])
-                    }
-                }),
-        },
-    ]
+                    }),
+            },
+        ]
+    }
 
     const onContext = (item: INavLink, event: React.MouseEvent) => {
         const [type, index] = item.key.split("-")

@@ -19,6 +19,8 @@ import {
 } from "../scripts/models/source"
 import { shareSubmenu } from "./context-menu"
 import { platformCtrl, decodeFetchResponse } from "../scripts/utils"
+import { parseArticleKeywords } from "./utils/article-keywords"
+import { buildWebviewKeywordHighlightInjectSource } from "../scripts/utils/webview-keyword-inject"
 
 const FONT_SIZE_OPTIONS = [12, 13, 14, 15, 16, 17, 18, 19, 20]
 
@@ -253,6 +255,29 @@ class Article extends React.Component<ArticleProps, ArticleState> {
 
     webviewLoaded = () => {
         this.setState({ loaded: true })
+        if (!this.webview) {
+            return
+        }
+        let isExternalHttp = false
+        try {
+            const u = this.webview.getURL()
+            isExternalHttp =
+                u.startsWith("http://") || u.startsWith("https://")
+        } catch {
+            isExternalHttp = false
+        }
+        if (!isExternalHttp) {
+            return
+        }
+        const kw = parseArticleKeywords(
+            window.settings.getArticleHighlightKeywords()
+        )
+        const src = buildWebviewKeywordHighlightInjectSource(kw)
+        if (src) {
+            void this.webview.executeJavaScript(src).catch(() => {
+                /* guest page may block script; ignore */
+            })
+        }
     }
     webviewError = (reason: string) => {
         this.setState({ error: true, errorDescription: reason })
@@ -367,11 +392,18 @@ class Article extends React.Component<ArticleProps, ArticleState> {
                 </>
             )
         )
+        const kw = parseArticleKeywords(
+            window.settings.getArticleHighlightKeywords()
+        )
+        const k =
+            kw.length > 0
+                ? `&k=${encodeURIComponent(JSON.stringify(kw))}`
+                : ""
         return `article/article.html?a=${a}&h=${h}&f=${encodeURIComponent(
             this.state.fontFamily
         )}&s=${this.state.fontSize}&d=${this.props.source.textDir}&u=${
             this.props.item.link
-        }&m=${this.state.loadFull ? 1 : 0}`
+        }&m=${this.state.loadFull ? 1 : 0}${k}`
     }
 
     render = () => (

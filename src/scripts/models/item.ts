@@ -56,6 +56,8 @@ export class RSSItem {
     content: string
     snippet: string
     creator?: string
+    /** Optional avatar URL for the author/publisher (e.g. from RSS extension). */
+    creatorAvatar?: string
     hasRead: boolean
     starred: boolean
     hidden: boolean
@@ -63,7 +65,7 @@ export class RSSItem {
     serviceRef?: string
 
     constructor(item: MyParserItem, source: RSSSource) {
-        for (let field of ["title", "link", "creator"]) {
+        for (let field of ["title", "link", "creator", "creatorAvatar"]) {
             const content = item[field]
             if (content && typeof content !== "string") delete item[field]
         }
@@ -72,7 +74,18 @@ export class RSSItem {
         this.link = item.link || ""
         this.fetchedDate = new Date()
         this.date = new Date(item.isoDate ?? item.pubDate ?? this.fetchedDate)
-        this.creator = item.creator
+        {
+            const a = item as MyParserItem & { author?: string }
+            const raw = item.creator ?? a.author
+            this.creator = typeof raw === "string" ? raw : undefined
+        }
+        {
+            const av = item.creatorAvatar
+            this.creatorAvatar =
+                typeof av === "string" && av.trim() !== ""
+                    ? av.trim()
+                    : undefined
+        }
         this.hasRead = false
         this.starred = false
         this.hidden = false
@@ -80,9 +93,13 @@ export class RSSItem {
     }
 
     static parseContent(item: RSSItem, parsed: MyParserItem) {
-        for (let field of ["thumb", "content", "fullContent"]) {
+        for (let field of ["thumb", "content", "fullContent", "creatorAvatar"]) {
             const content = parsed[field]
             if (content && typeof content !== "string") delete parsed[field]
+        }
+        if (parsed.creatorAvatar && typeof parsed.creatorAvatar === "string") {
+            const t = parsed.creatorAvatar.trim()
+            item.creatorAvatar = t !== "" ? t : undefined
         }
         if (parsed.fullContent) {
             item.content = parsed.fullContent

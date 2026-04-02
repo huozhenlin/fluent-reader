@@ -131,6 +131,13 @@ const settingsBridge = {
         ipcRenderer.invoke("set-nedb-status", flag)
     },
 
+    getArticleHighlightKeywords: (): string => {
+        return ipcRenderer.sendSync("get-article-highlight-keywords")
+    },
+    setArticleHighlightKeywords: (value: string) => {
+        ipcRenderer.invoke("set-article-highlight-keywords", value)
+    },
+
     getAll: () => {
         return ipcRenderer.sendSync("get-all-settings") as Object
     },

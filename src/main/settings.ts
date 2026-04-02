@@ -232,3 +232,28 @@ ipcMain.on("get-source-fetch-frequency-is-seconds", event => {
 ipcMain.handle("set-source-fetch-frequency-is-seconds", (_, flag: boolean) => {
     store.set(SOURCE_FETCH_FREQ_IS_SECONDS_KEY, flag)
 })
+
+const ARTICLE_HIGHLIGHT_KW_KEY = "articleHighlightKeywords"
+const LEGACY_PUBLISHER_HIGHLIGHT_KW_KEY = "publisherHighlightKeywords"
+
+function readArticleHighlightKeywords(): string {
+    let v = store.get(ARTICLE_HIGHLIGHT_KW_KEY) as string | undefined
+    if (v != null && String(v).trim() !== "") {
+        return String(v)
+    }
+    const raw = store.store as Record<string, unknown>
+    const legacy = raw[LEGACY_PUBLISHER_HIGHLIGHT_KW_KEY]
+    if (typeof legacy === "string" && legacy.trim() !== "") {
+        store.set(ARTICLE_HIGHLIGHT_KW_KEY, legacy)
+        delete raw[LEGACY_PUBLISHER_HIGHLIGHT_KW_KEY]
+        return legacy
+    }
+    return ""
+}
+
+ipcMain.on("get-article-highlight-keywords", event => {
+    event.returnValue = readArticleHighlightKeywords()
+})
+ipcMain.handle("set-article-highlight-keywords", (_, value: string) => {
+    store.set(ARTICLE_HIGHLIGHT_KW_KEY, value)
+})
